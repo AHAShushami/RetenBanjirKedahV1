@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pelaporan Banjir — Unit KPAS, JKN Kedah</title>
+    <meta name="description" content="Sistem pelaporan bencana banjir KKM Negeri Kedah. Borang digital untuk pelaporan daerah.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- docx export library -->
+    <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loader-container">
+            <div class="loader-ring"></div>
+            <div class="loader-text">Memuatkan Sistem...</div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Main App -->
+    <div id="app" class="app">
+        <!-- Top Bar -->
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <img src="https://jknkedah.moh.gov.my/jknkedah/images/Logo/Jata%20Baru%20KKM%20JKN.png" alt="Logo KKM JKN Kedah" class="header-logo">
+                <div class="header-text-group">
+                    <p class="header-unit">Unit Kesihatan Pekerjaan & Alam Sekitar</p>
+                    <p class="header-jabatan">Jabatan Kesihatan Negeri Kedah</p>
+                    <h1 class="app-title">Pelaporan Banjir</h1>
+                </div>
+            </div>
+            <div class="top-bar-right">
+                <div class="status-badge" id="connection-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Sedia</span>
+                </div>
+                <button class="btn-icon" id="btn-export-all" title="Eksport Semua ke Word">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Shared Header Section -->
+        <section class="shared-header" id="shared-header">
+            <div class="shared-header-grid">
+                <div class="header-field">
+                    <label for="hdr-negeri">Negeri</label>
+                    <input type="text" id="hdr-negeri" value="KEDAH" readonly class="field-readonly">
+                </div>
+                <div class="header-field">
+                    <label for="hdr-tarikh">Tarikh Laporan</label>
+                    <input type="date" id="hdr-tarikh" required>
+                </div>
+                <div class="header-field">
+                    <label for="hdr-daerah">Daerah</label>
+                    <select id="hdr-daerah" required>
+                        <option value="">— Pilih Daerah —</option>
+                        <option value="BALING">Baling</option>
+                        <option value="BANDAR BAHARU">Bandar Baharu</option>
+                        <option value="KOTA SETAR">Kota Setar</option>
+                        <option value="KUALA MUDA">Kuala Muda</option>
+                        <option value="KUBANG PASU">Kubang Pasu</option>
+                        <option value="KULIM">Kulim</option>
+                        <option value="LANGKAWI">Langkawi</option>
+                        <option value="PADANG TERAP">Padang Terap</option>
+                        <option value="PENDANG">Pendang</option>
+                        <option value="POKOK SENA">Pokok Sena</option>
+                        <option value="SIK">Sik</option>
+                        <option value="YAN">Yan</option>
+                    </select>
+                </div>
+                <div class="header-field">
+                    <label for="hdr-nama">Nama Pelapor</label>
+                    <input type="text" id="hdr-nama" placeholder="Nama penuh" required>
+                </div>
+                <div class="header-field">
+                    <label for="hdr-jawatan">Jawatan</label>
+                    <input type="text" id="hdr-jawatan" placeholder="Jawatan pelapor">
+                </div>
+                <div class="header-field">
+                    <label for="hdr-nama-semak">Nama Penyemak</label>
+                    <input type="text" id="hdr-nama-semak" placeholder="Nama penuh penyemak">
+                </div>
+            </div>
+        </section>
+
+        <!-- Module Tabs -->
+        <nav class="module-tabs" id="module-tabs">
+            <button class="tab active" data-module="pra-bencana">
+                <span class="tab-icon">🛡️</span>
+                <span class="tab-label">Pra-Bencana</span>
+                <span class="tab-borang">B1</span>
+            </button>
+            <button class="tab" data-module="pps">
+                <span class="tab-icon">🏠</span>
+                <span class="tab-label">PPS</span>
+                <span class="tab-borang">B2-4</span>
+            </button>
+            <button class="tab" data-module="pendidikan">
+                <span class="tab-icon">📚</span>
+                <span class="tab-label">Pendidikan</span>
+                <span class="tab-borang">B5</span>
+            </button>
+            <button class="tab" data-module="rawatan">
+                <span class="tab-icon">🏥</span>
+                <span class="tab-label">Rawatan</span>
+                <span class="tab-borang">B6-7,12</span>
+            </button>
+            <button class="tab" data-module="vektor">
+                <span class="tab-icon">🦟</span>
+                <span class="tab-label">Vektor</span>
+                <span class="tab-borang">B8-11</span>
+            </button>
+            <button class="tab" data-module="makanan">
+                <span class="tab-icon">🍽️</span>
+                <span class="tab-label">Makanan</span>
+                <span class="tab-borang">B13-15</span>
+            </button>
+            <button class="tab" data-module="mental">
+                <span class="tab-icon">🧠</span>
+                <span class="tab-label">Mental</span>
+                <span class="tab-borang">J13-14,B18</span>
+            </button>
+            <button class="tab" data-module="anggota">
+                <span class="tab-icon">👥</span>
+                <span class="tab-label">Anggota</span>
+                <span class="tab-borang">B16,19</span>
+            </button>
+            <button class="tab" data-module="pasca">
+                <span class="tab-icon">🔄</span>
+                <span class="tab-label">Pasca</span>
+                <span class="tab-borang">B20-21</span>
+            </button>
+            <button class="tab tab-state" data-module="negeri">
+                <span class="tab-icon">📊</span>
+                <span class="tab-label">Paparan Negeri</span>
+            </button>
+        </nav>
+
+        <!-- Module Content Area -->
+        <main class="module-content" id="module-content">
+
+            <!-- ===================== MODULE 1: PRA-BENCANA ===================== -->
+            <div class="module-panel active" id="panel-pra-bencana">
+                <div class="panel-header">
+                    <h2>Borang 1 — Maklumat Persiapan Pengurusan Banjir (Kesihatan)</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-outline btn-sm" onclick="exportModule('pra-bencana')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Eksport Word
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="submitModule('pra-bencana')">Hantar</button>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">Jawatankuasa Pengurusan Banjir</h3>
+                    <div class="form-grid cols-2">
+                        <div class="form-group">
+                            <label>Tarikh Mesyuarat Pusingan 1 (Jan-Jun)</label>
+                            <input type="date" id="b1-mesyuarat-p1" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Tarikh Mesyuarat Pusingan 2 (Jul-Dis)</label>
+                            <input type="date" id="b1-mesyuarat-p2" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Jumlah Daerah Berisiko Banjir</label>
+                            <input type="number" id="b1-daerah-risiko" class="form-control" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Jumlah Daerah Dalam Negeri</label>
+                            <input type="number" id="b1-daerah-negeri" class="form-control" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">Bil. Pasukan Kesihatan / Perubatan Banjir</h3>
+                    <table class="data-table" id="b1-pasukan-table">
+                        <thead>
+                            <tr>
+                                <th>Daerah</th>
+                                <th colspan="2">Pasukan Kesihatan</th>
+                                <th colspan="2">Pasukan Perubatan</th>
+                                <th colspan="2">Jumlah</th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th>Bil Pasukan</th>
+                                <th>Bil Ahli</th>
+                                <th>Bil Pasukan</th>
+                                <th>Bil Ahli</th>
+                                <th>Bil Pasukan</th>
+                                <th>Bil Ahli</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="cell-label" id="b1-daerah-display">—</td>
+                                <td><input type="number" class="cell-input" id="b1-kes-pasukan" min="0"></td>
+                                <td><input type="number" class="cell-input" id="b1-kes-ahli" min="0"></td>
+                                <td><input type="number" class="cell-input" id="b1-per-pasukan" min="0"></td>
+                                <td><input type="number" class="cell-input" id="b1-per-ahli" min="0"></td>
+                                <td class="cell-auto" id="b1-jum-pasukan">0</td>
+                                <td class="cell-auto" id="b1-jum-ahli">0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">Senarai Bilik Gerakan dan No Telefon</h3>
+                    <div id="b1-bilik-gerakan-rows">
+                        <div class="dynamic-row" data-index="0">
+                            <div class="form-grid cols-2">
+                                <div class="form-group">
+                                    <label>Bilik Gerakan Banjir</label>
+                                    <input type="text" class="form-control b1-bilik-nama" placeholder="Nama bilik gerakan">
+                                </div>
+                                <div class="form-group">
+                                    <label>No Telefon / Faks / H.P</label>
+                                    <input type="text" class="form-control b1-bilik-tel" placeholder="04-XXXXXXX">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline btn-sm btn-add-row" onclick="addDynamicRow('b1-bilik-gerakan')">+ Tambah Bilik Gerakan</button>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">Senarai Fasiliti Kesihatan Yang Berisiko Dilanda Banjir</h3>
+                    <div id="b1-fasiliti-risiko-rows">
+                        <div class="dynamic-row" data-index="0">
+                            <div class="form-group">
+                                <label>Nama Fasiliti</label>
+                                <input type="text" class="form-control b1-fasiliti-nama" placeholder="Nama fasiliti kesihatan">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline btn-sm btn-add-row" onclick="addDynamicRow('b1-fasiliti-risiko')">+ Tambah Fasiliti</button>
+                </div>
+            </div>
+
+            <!-- ===================== MODULE 2: PPS ===================== -->
+            <div class="module-panel" id="panel-pps">
+                <div class="panel-header">
+                    <h2>Pusat Pemindahan Sementara (PPS)</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-outline btn-sm" onclick="exportModule('pps')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Eksport Word
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="submitModule('pps')">Hantar</button>
+                    </div>
+                </div>
+
+                <!-- Borang 2: Senarai PPS -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 2 — Senarai PPS & Status Penyediaan Makanan</h3>
+                    <div id="b2-pps-rows">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Bil</th>
+                                    <th>Nama Pusat Pemindahan</th>
+                                    <th>Kapasiti Mangsa</th>
+                                    <th>Bil Pengendali Makanan</th>
+                                    <th>Bil Pengendali Menjalani Pemeriksaan</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="b2-pps-tbody"></tbody>
+                            <tfoot>
+                                <tr class="row-total">
+                                    <td colspan="2">JUMLAH</td>
+                                    <td id="b2-total-kapasiti">0</td>
+                                    <td id="b2-total-pengendali">0</td>
+                                    <td id="b2-total-pemeriksaan">0</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <button class="btn btn-outline btn-sm btn-add-row" onclick="addPPSRow()">+ Tambah PPS</button>
+                </div>
+
+                <!-- Borang 3: Pasukan Perubatan -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 3 — Pasukan Perubatan & Kesihatan di PPS</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th rowspan="2">Perkara</th>
+                                <th colspan="2">Pasukan</th>
+                            </tr>
+                            <tr><th>Bil</th><th>Ahli</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="cell-label">Bil. & Lokasi PPS Dilawati</td>
+                                <td><input type="number" class="cell-input" id="b3-pps-bil" min="0"></td>
+                                <td><input type="number" class="cell-input" id="b3-pps-penduduk" min="0"></td>
+                            </tr>
+                            <tr><td class="cell-label">Pasukan Kesihatan</td><td><input type="number" class="cell-input" id="b3-kes-bil" min="0"></td><td><input type="number" class="cell-input" id="b3-kes-ahli" min="0"></td></tr>
+                            <tr><td class="cell-label">Pasukan Perubatan</td><td><input type="number" class="cell-input" id="b3-per-bil" min="0"></td><td><input type="number" class="cell-input" id="b3-per-ahli" min="0"></td></tr>
+                            <tr><td class="cell-label">Pasukan MHPSS</td><td><input type="number" class="cell-input" id="b3-mhpss-bil" min="0"></td><td><input type="number" class="cell-input" id="b3-mhpss-ahli" min="0"></td></tr>
+                            <tr><td class="cell-label">Mobil/Bergerak</td><td><input type="number" class="cell-input" id="b3-mobil-bil" min="0"></td><td><input type="number" class="cell-input" id="b3-mobil-ahli" min="0"></td></tr>
+                            <tr><td class="cell-label">Statik</td><td><input type="number" class="cell-input" id="b3-statik-bil" min="0"></td><td><input type="number" class="cell-input" id="b3-statik-ahli" min="0"></td></tr>
+                            <tr class="row-total">
+                                <td>JUMLAH</td>
+                                <td id="b3-jum-bil">0</td>
+                                <td id="b3-jum-ahli">0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="form-group mt-3">
+                        <label>Catatan</label>
+                        <textarea class="form-control" id="b3-catatan" rows="2" placeholder="Catatan tambahan..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Borang 4: Fasiliti Terjejas -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 4 — Fasiliti Kesihatan Yang Terjejas Banjir</h3>
+                    <div class="info-box">
+                        <strong>Tahap Fasiliti:</strong>
+                        1=Beroperasi Penuh (Tidak dimasuki air) |
+                        2=Beroperasi Penuh (Kenderaan berat sahaja) |
+                        3=Beroperasi Separuh (Dimasuki air) |
+                        4=Tidak Beroperasi (Isu infrastruktur) |
+                        5=Tidak Beroperasi (Bot/udara sahaja) |
+                        6=Tidak Beroperasi (Dimasuki air, bot sahaja) |
+                        7=Tidak Beroperasi (Tenggelam)
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Bil</th>
+                                <th>Nama Fasiliti</th>
+                                <th>Tahap</th>
+                                <th>Perkhidmatan Dipindahkan</th>
+                                <th>Tarikh Tutup</th>
+                                <th>Tarikh Dibuka Semula</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="b4-fasiliti-tbody"></tbody>
+                    </table>
+                    <button class="btn btn-outline btn-sm btn-add-row" onclick="addFasilitiRow()">+ Tambah Fasiliti</button>
+                </div>
+            </div>
+
+            <!-- ===================== MODULE 3: PENDIDIKAN KESIHATAN ===================== -->
+            <div class="module-panel" id="panel-pendidikan">
+                <div class="panel-header">
+                    <h2>Pendidikan Kesihatan</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-outline btn-sm" onclick="exportModule('pendidikan')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Eksport Word
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="submitModule('pendidikan')">Hantar</button>
+                    </div>
+                </div>
+
+                <!-- Borang 5.1: Aktiviti Fizikal -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 5.1 — Aktiviti Pendidikan Kesihatan di PPS</h3>
+                    <table class="data-table" id="b51-table">
+                        <thead>
+                            <tr>
+                                <th rowspan="2">Aktiviti</th>
+                                <th colspan="2">Bilangan Sesi</th>
+                            </tr>
+                            <tr><th>Bil</th><th>Kum</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="cell-label">Ceramah</td><td><input type="number" class="cell-input bil-field" data-kum="b51-ceramah-kum" id="b51-ceramah-bil" min="0"></td><td class="cell-auto kum-field" id="b51-ceramah-kum">0</td></tr>
+                            <tr><td class="cell-label">Taklimat</td><td><input type="number" class="cell-input bil-field" data-kum="b51-taklimat-kum" id="b51-taklimat-bil" min="0"></td><td class="cell-auto kum-field" id="b51-taklimat-kum">0</td></tr>
+                            <tr><td class="cell-label">Tunjuk Cara</td><td><input type="number" class="cell-input bil-field" id="b51-tunjukcara-bil" min="0"></td><td class="cell-auto kum-field" id="b51-tunjukcara-kum">0</td></tr>
+                            <tr><td class="cell-label">Perb. Kump. Kecil</td><td><input type="number" class="cell-input bil-field" id="b51-kumpkecil-bil" min="0"></td><td class="cell-auto kum-field" id="b51-kumpkecil-kum">0</td></tr>
+                            <tr><td class="cell-label">Nasihat Individu</td><td><input type="number" class="cell-input bil-field" id="b51-nasihat-bil" min="0"></td><td class="cell-auto kum-field" id="b51-nasihat-kum">0</td></tr>
+                            <tr><td class="cell-label">Gotong Royong</td><td><input type="number" class="cell-input bil-field" id="b51-gotong-bil" min="0"></td><td class="cell-auto kum-field" id="b51-gotong-kum">0</td></tr>
+                            <tr><td class="cell-label">Pameran</td><td><input type="number" class="cell-input bil-field" id="b51-pameran-bil" min="0"></td><td class="cell-auto kum-field" id="b51-pameran-kum">0</td></tr>
+                        </tbody>
+                    </table>
+                    <h4 class="subsection-title mt-3">Edaran Bahan</h4>
+                    <table class="data-table">
+                        <thead><tr><th>Bahan</th><th>Bil</th><th>Kum</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">Risalah</td><td><input type="number" class="cell-input bil-field" id="b51-risalah-bil" min="0"></td><td class="cell-auto kum-field" id="b51-risalah-kum">0</td></tr>
+                            <tr><td class="cell-label">Poster</td><td><input type="number" class="cell-input bil-field" id="b51-poster-bil" min="0"></td><td class="cell-auto kum-field" id="b51-poster-kum">0</td></tr>
+                            <tr><td class="cell-label">Bunting</td><td><input type="number" class="cell-input bil-field" id="b51-bunting-bil" min="0"></td><td class="cell-auto kum-field" id="b51-bunting-kum">0</td></tr>
+                            <tr><td class="cell-label">Banner</td><td><input type="number" class="cell-input bil-field" id="b51-banner-bil" min="0"></td><td class="cell-auto kum-field" id="b51-banner-kum">0</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Borang 5.2: Media Sosial -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 5.2 — Hebahan Awam & Media Sosial</h3>
+                    <h4 class="subsection-title">Hebahan Awam</h4>
+                    <table class="data-table">
+                        <thead><tr><th>Saluran</th><th>Bil</th><th>Kum</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">Unit Bergerak (Sesi)</td><td><input type="number" class="cell-input bil-field" id="b52-bergerak-bil" min="0"></td><td class="cell-auto kum-field" id="b52-bergerak-kum">0</td></tr>
+                            <tr><td class="cell-label">TV (Slot)</td><td><input type="number" class="cell-input bil-field" id="b52-tv-bil" min="0"></td><td class="cell-auto kum-field" id="b52-tv-kum">0</td></tr>
+                            <tr><td class="cell-label">Radio (Slot)</td><td><input type="number" class="cell-input bil-field" id="b52-radio-bil" min="0"></td><td class="cell-auto kum-field" id="b52-radio-kum">0</td></tr>
+                        </tbody>
+                    </table>
+                    <h4 class="subsection-title mt-3">Media Sosial</h4>
+                    <table class="data-table">
+                        <thead><tr><th>Platform</th><th>Bil Post</th><th>Kum</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">Facebook (Post)</td><td><input type="number" class="cell-input bil-field" id="b52-fb-post-bil" min="0"></td><td class="cell-auto kum-field" id="b52-fb-post-kum">0</td></tr>
+                            <tr><td class="cell-label">Facebook (Reach)</td><td><input type="number" class="cell-input bil-field" id="b52-fb-reach-bil" min="0"></td><td class="cell-auto kum-field" id="b52-fb-reach-kum">0</td></tr>
+                            <tr><td class="cell-label">YouTube (Post)</td><td><input type="number" class="cell-input bil-field" id="b52-yt-bil" min="0"></td><td class="cell-auto kum-field" id="b52-yt-kum">0</td></tr>
+                            <tr><td class="cell-label">Twitter (Post)</td><td><input type="number" class="cell-input bil-field" id="b52-tw-bil" min="0"></td><td class="cell-auto kum-field" id="b52-tw-kum">0</td></tr>
+                            <tr><td class="cell-label">Instagram (Post)</td><td><input type="number" class="cell-input bil-field" id="b52-ig-bil" min="0"></td><td class="cell-auto kum-field" id="b52-ig-kum">0</td></tr>
+                            <tr><td class="cell-label">WhatsApp (Post)</td><td><input type="number" class="cell-input bil-field" id="b52-wa-bil" min="0"></td><td class="cell-auto kum-field" id="b52-wa-kum">0</td></tr>
+                            <tr><td class="cell-label">TikTok (Reach)</td><td><input type="number" class="cell-input bil-field" id="b52-tiktok-bil" min="0"></td><td class="cell-auto kum-field" id="b52-tiktok-kum">0</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===================== MODULE 4: RAWATAN & PENYAKIT ===================== -->
+            <div class="module-panel" id="panel-rawatan">
+                <div class="panel-header">
+                    <h2>Rawatan & Penyakit</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-outline btn-sm" onclick="exportModule('rawatan')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Eksport Word
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="submitModule('rawatan')">Hantar</button>
+                    </div>
+                </div>
+
+                <!-- Borang 6: Mangsa Diperiksa -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 6 — Mangsa Banjir Diperiksa & Penyakit Dikesan</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>Perkara</th><th>Bil</th><th>Kum</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="cell-label">Mangsa Yang Diperiksa</td><td><input type="number" class="cell-input bil-field" id="b6-diperiksa-bil" min="0"></td><td class="cell-auto kum-field" id="b6-diperiksa-kum">0</td></tr>
+                            <tr><td class="cell-label">Penyakit Berjangkit</td><td><input type="number" class="cell-input bil-field" id="b6-berjangkit-bil" min="0"></td><td class="cell-auto kum-field" id="b6-berjangkit-kum">0</td></tr>
+                            <tr><td class="cell-label">Penyakit Tak Berjangkit</td><td><input type="number" class="cell-input bil-field" id="b6-takberjangkit-bil" min="0"></td><td class="cell-auto kum-field" id="b6-takberjangkit-kum">0</td></tr>
+                            <tr><td class="cell-label">Kecederaan</td><td><input type="number" class="cell-input bil-field" id="b6-kecederaan-bil" min="0"></td><td class="cell-auto kum-field" id="b6-kecederaan-kum">0</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="form-grid cols-3 mt-3">
+                        <div class="form-group">
+                            <label>Bil. Wabak</label>
+                            <input type="number" class="form-control" id="b6-wabak-bil" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Jenis Wabak</label>
+                            <input type="text" class="form-control" id="b6-wabak-jenis" placeholder="Nyatakan jenis">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Borang 7: Pecahan Penyakit Berjangkit -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 7 — Kejadian Penyakit Berjangkit di PPS</h3>
+                    <table class="data-table">
+                        <thead><tr><th>Jenis Penyakit</th><th>Bil</th><th>Kum</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">ARI / URTI</td><td><input type="number" class="cell-input bil-field" id="b7-ari-bil" min="0"></td><td class="cell-auto kum-field" id="b7-ari-kum">0</td></tr>
+                            <tr><td class="cell-label">AGE</td><td><input type="number" class="cell-input bil-field" id="b7-age-bil" min="0"></td><td class="cell-auto kum-field" id="b7-age-kum">0</td></tr>
+                            <tr><td class="cell-label">Conjunctivitis</td><td><input type="number" class="cell-input bil-field" id="b7-conjunctivitis-bil" min="0"></td><td class="cell-auto kum-field" id="b7-conjunctivitis-kum">0</td></tr>
+                            <tr><td class="cell-label">HFMD</td><td><input type="number" class="cell-input bil-field" id="b7-hfmd-bil" min="0"></td><td class="cell-auto kum-field" id="b7-hfmd-kum">0</td></tr>
+                            <tr><td class="cell-label">Typhoid</td><td><input type="number" class="cell-input bil-field" id="b7-typhoid-bil" min="0"></td><td class="cell-auto kum-field" id="b7-typhoid-kum">0</td></tr>
+                            <tr><td class="cell-label">Leptospirosis</td><td><input type="number" class="cell-input bil-field" id="b7-leptospirosis-bil" min="0"></td><td class="cell-auto kum-field" id="b7-leptospirosis-kum">0</td></tr>
+                            <tr><td class="cell-label">Chicken Pox</td><td><input type="number" class="cell-input bil-field" id="b7-chickenpox-bil" min="0"></td><td class="cell-auto kum-field" id="b7-chickenpox-kum">0</td></tr>
+                            <tr><td class="cell-label">Skin Infection</td><td><input type="number" class="cell-input bil-field" id="b7-skin-bil" min="0"></td><td class="cell-auto kum-field" id="b7-skin-kum">0</td></tr>
+                            <tr><td class="cell-label">Other Notifiable Diseases</td><td><input type="number" class="cell-input bil-field" id="b7-other-bil" min="0"></td><td class="cell-auto kum-field" id="b7-other-kum">0</td></tr>
+                            <tr><td class="cell-label">Fever (Tiada Simptom Lain)</td><td><input type="number" class="cell-input bil-field" id="b7-fever-bil" min="0"></td><td class="cell-auto kum-field" id="b7-fever-kum">0</td></tr>
+                            <tr class="row-total"><td>JUMLAH PENYAKIT BERJANGKIT</td><td id="b7-total-bil">0</td><td id="b7-total-kum">0</td></tr>
+                        </tbody>
+                    </table>
+                    <h4 class="subsection-title mt-3">RTK COVID-19</h4>
+                    <table class="data-table">
+                        <thead><tr><th>Perkara</th><th>Bil</th><th>Kum</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">Jumlah RTK Dilaksanakan</td><td><input type="number" class="cell-input bil-field" id="b7-rtk-bil" min="0"></td><td class="cell-auto kum-field" id="b7-rtk-kum">0</td></tr>
+                            <tr><td class="cell-label">Keputusan Positif</td><td><input type="number" class="cell-input bil-field" id="b7-positif-bil" min="0"></td><td class="cell-auto kum-field" id="b7-positif-kum">0</td></tr>
+                            <tr><td class="cell-label">Keputusan Negatif</td><td><input type="number" class="cell-input bil-field" id="b7-negatif-bil" min="0"></td><td class="cell-auto kum-field" id="b7-negatif-kum">0</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Borang 12: Kemasukan Hospital -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 12 — Kemasukan Mangsa Banjir ke Hospital</h3>
+                    <div class="form-group">
+                        <label>Nama Hospital</label>
+                        <input type="text" class="form-control" id="b12-hospital" placeholder="Nama hospital">
+                    </div>
+                    <table class="data-table mt-2">
+                        <thead><tr><th>Kategori Kemasukan</th><th>Bil</th><th>Kum</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">Lelaki Dewasa</td><td><input type="number" class="cell-input bil-field" id="b12-lelaki-bil" min="0"></td><td class="cell-auto kum-field" id="b12-lelaki-kum">0</td></tr>
+                            <tr><td class="cell-label">Perempuan Dewasa</td><td><input type="number" class="cell-input bil-field" id="b12-perempuan-bil" min="0"></td><td class="cell-auto kum-field" id="b12-perempuan-kum">0</td></tr>
+                            <tr><td class="cell-label">Kanak-Kanak (≤12 tahun)</td><td><input type="number" class="cell-input bil-field" id="b12-kanak-bil" min="0"></td><td class="cell-auto kum-field" id="b12-kanak-kum">0</td></tr>
+                            <tr class="row-total"><td>JUMLAH KEMASUKAN</td><td id="b12-total-bil">0</td><td id="b12-total-kum">0</td></tr>
+                            <tr><td class="cell-label">Antenatal</td><td><input type="number" class="cell-input bil-field" id="b12-antenatal-bil" min="0"></td><td class="cell-auto kum-field" id="b12-antenatal-kum">0</td></tr>
+                            <tr><td class="cell-label">Postnatal</td><td><input type="number" class="cell-input bil-field" id="b12-postnatal-bil" min="0"></td><td class="cell-auto kum-field" id="b12-postnatal-kum">0</td></tr>
+                            <tr><td class="cell-label">Haemodialisis</td><td><input type="number" class="cell-input bil-field" id="b12-haemodialisis-bil" min="0"></td><td class="cell-auto kum-field" id="b12-haemodialisis-kum">0</td></tr>
+                            <tr><td class="cell-label">Paliatif</td><td><input type="number" class="cell-input bil-field" id="b12-paliatif-bil" min="0"></td><td class="cell-auto kum-field" id="b12-paliatif-kum">0</td></tr>
+                            <tr><td class="cell-label">Pesakit Tidak Dapat Discaj</td><td><input type="number" class="cell-input bil-field" id="b12-discaj-bil" min="0"></td><td class="cell-auto kum-field" id="b12-discaj-kum">0</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="form-group mt-3">
+                        <label>Catatan</label>
+                        <textarea class="form-control" id="b12-catatan" rows="2" placeholder="Catatan..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== MODULE 5: KAWALAN VEKTOR ===================== -->
+            <div class="module-panel" id="panel-vektor">
+                <div class="panel-header">
+                    <h2>Kawalan Vektor</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-outline btn-sm" onclick="exportModule('vektor')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Eksport Word
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="submitModule('vektor')">Hantar</button>
+                    </div>
+                </div>
+
+                <!-- Borang 8: Denggi di PPS -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 8 — Kawalan Denggi di PPS</h3>
+                    <table class="data-table">
+                        <thead><tr><th>Perkara</th><th>Bil</th><th>Kum</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">Bil PPS Sedia Ada</td><td><input type="number" class="cell-input" id="b8-sediaada" min="0"></td><td class="cell-na">—</td></tr>
+                            <tr><td class="cell-label">Bil PPS Diperiksa</td><td><input type="number" class="cell-input bil-field" id="b8-diperiksa-bil" min="0"></td><td class="cell-auto kum-field" id="b8-diperiksa-kum">0</td></tr>
+                            <tr><td class="cell-label">Bil PPS Positif</td><td><input type="number" class="cell-input bil-field" id="b8-positif-bil" min="0"></td><td class="cell-auto kum-field" id="b8-positif-kum">0</td></tr>
+                            <tr><td class="cell-label">Bil Bekas Diperiksa</td><td><input type="number" class="cell-input bil-field" id="b8-bekas-diperiksa-bil" min="0"></td><td class="cell-auto kum-field" id="b8-bekas-diperiksa-kum">0</td></tr>
+                            <tr><td class="cell-label">Bil Bekas Positif</td><td><input type="number" class="cell-input bil-field" id="b8-bekas-positif-bil" min="0"></td><td class="cell-auto kum-field" id="b8-bekas-positif-kum">0</td></tr>
+                            <tr class="row-highlight"><td class="cell-label">AI (%)</td><td class="cell-auto" id="b8-ai">0.00%</td><td class="cell-na">—</td></tr>
+                            <tr class="row-highlight"><td class="cell-label">BI</td><td class="cell-auto" id="b8-bi">0.00</td><td class="cell-na">—</td></tr>
+                            <tr><td class="cell-label">Bil PPS Disembur Kabus</td><td><input type="number" class="cell-input bil-field" id="b8-kabus-bil" min="0"></td><td class="cell-auto kum-field" id="b8-kabus-kum">0</td></tr>
+                            <tr><td class="cell-label">Bil Premis Larviciding</td><td><input type="number" class="cell-input bil-field" id="b8-larviciding-bil" min="0"></td><td class="cell-auto kum-field" id="b8-larviciding-kum">0</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="alert-box" id="b8-alert" style="display:none;">
+                        ⚠️ AI > 1% atau BI > 5: Kawalan Larvisid dan Adultisid perlu segera di PPS
+                    </div>
+                </div>
+
+                <!-- Borang 9: Kawalan Lalat -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 9 — Kawalan Lalat di Kawasan Banjir</h3>
+                    <table class="data-table">
+                        <thead><tr><th>Perkara</th><th>Bil</th><th>Kum</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">Bil Lokaliti Diperiksa</td><td><input type="number" class="cell-input bil-field" id="b9-diperiksa-bil" min="0"></td><td class="cell-auto kum-field" id="b9-diperiksa-kum">0</td></tr>
+                            <tr><td class="cell-label">Bil Positif Maggot</td><td><input type="number" class="cell-input bil-field" id="b9-maggot-bil" min="0"></td><td class="cell-auto kum-field" id="b9-maggot-kum">0</td></tr>
+                            <tr><td class="cell-label">Bil Positif Lalat Dewasa</td><td><input type="number" class="cell-input bil-field" id="b9-dewasa-bil" min="0"></td><td class="cell-auto kum-field" id="b9-dewasa-kum">0</td></tr>
+                            <tr><td class="cell-label">Tindakan Larvisid</td><td><input type="number" class="cell-input bil-field" id="b9-larvisid-bil" min="0"></td><td class="cell-auto kum-field" id="b9-larvisid-kum">0</td></tr>
+                            <tr><td class="cell-label">Tindakan Adultisid</td><td><input type="number" class="cell-input bil-field" id="b9-adultisid-bil" min="0"></td><td class="cell-auto kum-field" id="b9-adultisid-kum">0</td></tr>
+                            <tr><td class="cell-label">Bil Premis Disinfeksi</td><td><input type="number" class="cell-input bil-field" id="b9-disinfeksi-bil" min="0"></td><td class="cell-auto kum-field" id="b9-disinfeksi-kum">0</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Borang 10: Tikus & Lipas -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 10 — Kawalan Tikus & Lipas</h3>
+                    <table class="data-table">
+                        <thead><tr><th>Perkara</th><th>Bil</th><th>Kum</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">Bil Lokaliti Diperiksa</td><td><input type="number" class="cell-input bil-field" id="b10-diperiksa-bil" min="0"></td><td class="cell-auto kum-field" id="b10-diperiksa-kum">0</td></tr>
+                            <tr><td class="cell-label">Bil Positif Tikus</td><td><input type="number" class="cell-input bil-field" id="b10-tikus-bil" min="0"></td><td class="cell-auto kum-field" id="b10-tikus-kum">0</td></tr>
+                            <tr><td class="cell-label">Bil Positif Lipas</td><td><input type="number" class="cell-input bil-field" id="b10-lipas-bil" min="0"></td><td class="cell-auto kum-field" id="b10-lipas-kum">0</td></tr>
+                            <tr class="row-highlight"><td class="cell-label">% Positif Tikus</td><td class="cell-auto" id="b10-pct-tikus">0.00%</td><td class="cell-na">—</td></tr>
+                            <tr class="row-highlight"><td class="cell-label">% Positif Lipas</td><td class="cell-auto" id="b10-pct-lipas">0.00%</td><td class="cell-na">—</td></tr>
+                            <tr><td class="cell-label">Bil Perkhidmatan Pest Control</td><td><input type="number" class="cell-input bil-field" id="b10-pest-bil" min="0"></td><td class="cell-auto kum-field" id="b10-pest-kum">0</td></tr>
+                            <tr><td class="cell-label">Pemantauan PKD Terkawal (Tikus)</td><td><input type="number" class="cell-input bil-field" id="b10-pkd-tikus-bil" min="0"></td><td class="cell-auto kum-field" id="b10-pkd-tikus-kum">0</td></tr>
+                            <tr><td class="cell-label">Pemantauan PKD Terkawal (Lalat)</td><td><input type="number" class="cell-input bil-field" id="b10-pkd-lalat-bil" min="0"></td><td class="cell-auto kum-field" id="b10-pkd-lalat-kum">0</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Borang 11: Bekalan Air -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 11 — Keselamatan Bekalan Air Minum</h3>
+                    <table class="data-table">
+                        <thead><tr><th>Perkara</th><th>Bil</th><th>Kum</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">Bil Telaga Diperiksa</td><td><input type="number" class="cell-input bil-field" id="b11-telaga-bil" min="0"></td><td class="cell-auto kum-field" id="b11-telaga-kum">0</td></tr>
+                            <tr><td class="cell-label">Bil Telaga Diklorin</td><td><input type="number" class="cell-input bil-field" id="b11-klorin-bil" min="0"></td><td class="cell-auto kum-field" id="b11-klorin-kum">0</td></tr>
+                            <tr><td class="cell-label">Bil Sampel</td><td><input type="number" class="cell-input bil-field" id="b11-sampel-bil" min="0"></td><td class="cell-auto kum-field" id="b11-sampel-kum">0</td></tr>
+                            <tr><td class="cell-label">Pelanggaran pH</td><td><input type="number" class="cell-input bil-field" id="b11-ph-bil" min="0"></td><td class="cell-auto kum-field" id="b11-ph-kum">0</td></tr>
+                            <tr><td class="cell-label">Pelanggaran Klorin</td><td><input type="number" class="cell-input bil-field" id="b11-pklorin-bil" min="0"></td><td class="cell-auto kum-field" id="b11-pklorin-kum">0</td></tr>
+                            <tr><td class="cell-label">Pelanggaran NTU</td><td><input type="number" class="cell-input bil-field" id="b11-ntu-bil" min="0"></td><td class="cell-auto kum-field" id="b11-ntu-kum">0</td></tr>
+                            <tr><td class="cell-label">Pelanggaran E-coli</td><td><input type="number" class="cell-input bil-field" id="b11-ecoli-bil" min="0"></td><td class="cell-auto kum-field" id="b11-ecoli-kum">0</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===================== MODULE 6: KESELAMATAN MAKANAN ===================== -->
+            <div class="module-panel" id="panel-makanan">
+                <div class="panel-header">
+                    <h2>Keselamatan Makanan</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-outline btn-sm" onclick="exportModule('makanan')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Eksport Word
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="submitModule('makanan')">Hantar</button>
+                    </div>
+                </div>
+
+                <!-- Borang 13 PKD -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 13 — Aktiviti Harian Kawalan Keselamatan Makanan di PPS</h3>
+                    <table class="data-table">
+                        <thead><tr><th>Perkara</th><th>Bil</th><th>Kum</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">Bil PPS Dilawati</td><td><input type="number" class="cell-input bil-field" id="b13-dilawati-bil" min="0"></td><td class="cell-auto kum-field" id="b13-dilawati-kum">0</td></tr>
+                            <tr><td class="cell-label">Bil Memuaskan (Premis Makanan)</td><td><input type="number" class="cell-input bil-field" id="b13-memuaskan-bil" min="0"></td><td class="cell-auto kum-field" id="b13-memuaskan-kum">0</td></tr>
+                            <tr><td class="cell-label">Bil Tidak Memuaskan</td><td><input type="number" class="cell-input bil-field" id="b13-takmemuaskan-bil" min="0"></td><td class="cell-auto kum-field" id="b13-takmemuaskan-kum">0</td></tr>
+                            <tr><td class="cell-label">Bil Tindakan Pembetulan</td><td><input type="number" class="cell-input bil-field" id="b13-pembetulan-bil" min="0"></td><td class="cell-auto kum-field" id="b13-pembetulan-kum">0</td></tr>
+                            <tr><td class="cell-label">Pendidikan Kesihatan — Bil Sesi</td><td><input type="number" class="cell-input bil-field" id="b13-sesi-bil" min="0"></td><td class="cell-auto kum-field" id="b13-sesi-kum">0</td></tr>
+                            <tr><td class="cell-label">Pendidikan Kesihatan — Bil Peserta</td><td><input type="number" class="cell-input bil-field" id="b13-peserta-bil" min="0"></td><td class="cell-auto kum-field" id="b13-peserta-kum">0</td></tr>
+                            <tr><td class="cell-label">Pengendali Makanan — Bil Suntikan</td><td><input type="number" class="cell-input bil-field" id="b13-suntikan-bil" min="0"></td><td class="cell-auto kum-field" id="b13-suntikan-kum">0</td></tr>
+                            <tr><td class="cell-label">Aduan Makanan</td><td><input type="number" class="cell-input bil-field" id="b13-aduan-bil" min="0"></td><td class="cell-auto kum-field" id="b13-aduan-kum">0</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="form-group mt-3">
+                        <label>Catatan</label>
+                        <textarea class="form-control" id="b13-catatan" rows="2" placeholder="Catatan..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Borang 14: Aduan Makanan -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 14 — Penerimaan Aduan Makanan di PPS</h3>
+                    <div class="form-grid cols-2">
+                        <div class="form-group">
+                            <label>Pusat Pemindahan / Premis</label>
+                            <input type="text" class="form-control" id="b14-premis" placeholder="Nama PPS / Premis">
+                        </div>
+                        <div class="form-group">
+                            <label>Lokasi</label>
+                            <input type="text" class="form-control" id="b14-lokasi" placeholder="Lokasi">
+                        </div>
+                        <div class="form-group">
+                            <label>Masa</label>
+                            <input type="time" class="form-control" id="b14-masa">
+                        </div>
+                        <div class="form-group">
+                            <label>Nama Penerimaan Aduan</label>
+                            <input type="text" class="form-control" id="b14-penerima" placeholder="Nama penerima aduan">
+                        </div>
+                    </div>
+                    <div id="b14-aduan-rows">
+                        <table class="data-table mt-2">
+                            <thead>
+                                <tr>
+                                    <th>Bil</th>
+                                    <th>Nombor Aduan</th>
+                                    <th>Sumber Aduan</th>
+                                    <th>Jenis Aduan</th>
+                                    <th>Tindakan</th>
+                                    <th>Catatan</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="b14-aduan-tbody"></tbody>
+                        </table>
+                    </div>
+                    <button class="btn btn-outline btn-sm btn-add-row" onclick="addAduanRow()">+ Tambah Aduan</button>
+                </div>
+
+                <!-- Borang 15: Analisa Risiko -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 15 — Analisa Risiko Keselamatan Makanan di PPS</h3>
+                    <div class="form-grid cols-2 mb-3">
+                        <div class="form-group">
+                            <label>Nama Pusat Pemindahan</label>
+                            <input type="text" class="form-control" id="b15-pps" placeholder="Nama PPS">
+                        </div>
+                        <div class="form-group">
+                            <label>Tarikh & Masa Lawatan</label>
+                            <input type="datetime-local" class="form-control" id="b15-masa">
+                        </div>
+                        <div class="form-group">
+                            <label>Bilangan Mangsa Banjir</label>
+                            <input type="number" class="form-control" id="b15-mangsa" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Bilangan Pengendali</label>
+                            <input type="number" class="form-control" id="b15-pengendali" min="0">
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead><tr><th>Bil</th><th>Elemen</th><th>Risiko</th><th>Skor</th><th>Ringkasan Penemuan</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td class="cell-label">Makanan (Bahan Mentah, Penyediaan, Pengambilan)</td><td><select class="cell-select" id="b15-r1"><option value="">—</option><option value="Rendah">Rendah</option><option value="Sederhana">Sederhana</option><option value="Tinggi">Tinggi</option></select></td><td><input type="number" class="cell-input" id="b15-s1" min="0" max="10"></td><td><input type="text" class="cell-input" id="b15-p1"></td></tr>
+                            <tr><td>2</td><td class="cell-label">Pengendali Makanan</td><td><select class="cell-select" id="b15-r2"><option value="">—</option><option value="Rendah">Rendah</option><option value="Sederhana">Sederhana</option><option value="Tinggi">Tinggi</option></select></td><td><input type="number" class="cell-input" id="b15-s2" min="0" max="10"></td><td><input type="text" class="cell-input" id="b15-p2"></td></tr>
+                            <tr><td>3</td><td class="cell-label">Peralatan</td><td><select class="cell-select" id="b15-r3"><option value="">—</option><option value="Rendah">Rendah</option><option value="Sederhana">Sederhana</option><option value="Tinggi">Tinggi</option></select></td><td><input type="number" class="cell-input" id="b15-s3" min="0" max="10"></td><td><input type="text" class="cell-input" id="b15-p3"></td></tr>
+                            <tr><td>4</td><td class="cell-label">Bekalan Air</td><td><select class="cell-select" id="b15-r4"><option value="">—</option><option value="Rendah">Rendah</option><option value="Sederhana">Sederhana</option><option value="Tinggi">Tinggi</option></select></td><td><input type="number" class="cell-input" id="b15-s4" min="0" max="10"></td><td><input type="text" class="cell-input" id="b15-p4"></td></tr>
+                            <tr><td>5</td><td class="cell-label">Pelupusan Sampah</td><td><select class="cell-select" id="b15-r5"><option value="">—</option><option value="Rendah">Rendah</option><option value="Sederhana">Sederhana</option><option value="Tinggi">Tinggi</option></select></td><td><input type="number" class="cell-input" id="b15-s5" min="0" max="10"></td><td><input type="text" class="cell-input" id="b15-p5"></td></tr>
+                            <tr><td>6</td><td class="cell-label">Urungan Lalat</td><td><select class="cell-select" id="b15-r6"><option value="">—</option><option value="Rendah">Rendah</option><option value="Sederhana">Sederhana</option><option value="Tinggi">Tinggi</option></select></td><td><input type="number" class="cell-input" id="b15-s6" min="0" max="10"></td><td><input type="text" class="cell-input" id="b15-p6"></td></tr>
+                            <tr><td>7</td><td class="cell-label">Kemudahan Mencuci Tangan</td><td><select class="cell-select" id="b15-r7"><option value="">—</option><option value="Rendah">Rendah</option><option value="Sederhana">Sederhana</option><option value="Tinggi">Tinggi</option></select></td><td><input type="number" class="cell-input" id="b15-s7" min="0" max="10"></td><td><input type="text" class="cell-input" id="b15-p7"></td></tr>
+                            <tr><td>8</td><td class="cell-label">Kemudahan Tandas</td><td><select class="cell-select" id="b15-r8"><option value="">—</option><option value="Rendah">Rendah</option><option value="Sederhana">Sederhana</option><option value="Tinggi">Tinggi</option></select></td><td><input type="number" class="cell-input" id="b15-s8" min="0" max="10"></td><td><input type="text" class="cell-input" id="b15-p8"></td></tr>
+                            <tr class="row-total"><td colspan="3">JUMLAH SKOR</td><td id="b15-total-skor">0</td><td></td></tr>
+                        </tbody>
+                    </table>
+                    <div class="form-group mt-3">
+                        <label>Tindakan Diambil</label>
+                        <textarea class="form-control" id="b15-tindakan" rows="2" placeholder="Tindakan yang diambil..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== MODULE 7: KESIHATAN MENTAL ===================== -->
+            <div class="module-panel" id="panel-mental">
+                <div class="panel-header">
+                    <h2>Kesihatan Mental (MHPSS)</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-outline btn-sm" onclick="exportModule('mental')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Eksport Word
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="submitModule('mental')">Hantar</button>
+                    </div>
+                </div>
+
+                <!-- Jadual 13: Aktiviti MHPSS -->
+                <div class="form-section">
+                    <h3 class="section-title">Jadual 13 — Aktiviti Sokongan Kesihatan Mental di PPS</h3>
+                    <div class="form-group">
+                        <label>Jenis Bencana</label>
+                        <select class="form-control" id="j13-jenis">
+                            <option value="BANJIR" selected>BANJIR</option>
+                            <option value="TANAH RUNTUH">TANAH RUNTUH</option>
+                            <option value="RIBUT">RIBUT</option>
+                            <option value="LAIN-LAIN">LAIN-LAIN</option>
+                        </select>
+                    </div>
+                    <table class="data-table mt-2">
+                        <thead><tr><th>Perkara</th><th>Bilangan</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">Bilangan Lokasi Dilawati</td><td><input type="number" class="cell-input" id="j13-lokasi" min="0"></td></tr>
+                        </tbody>
+                    </table>
+                    <h4 class="subsection-title mt-3">Bilangan Petugas MHPSS</h4>
+                    <table class="data-table">
+                        <thead><tr><th>Kategori</th><th>Bil</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">PSY (Psychologist)</td><td><input type="number" class="cell-input" id="j13-psy" min="0"></td></tr>
+                            <tr><td class="cell-label">FMS</td><td><input type="number" class="cell-input" id="j13-fms" min="0"></td></tr>
+                            <tr><td class="cell-label">MO</td><td><input type="number" class="cell-input" id="j13-mo" min="0"></td></tr>
+                            <tr><td class="cell-label">PPSI</td><td><input type="number" class="cell-input" id="j13-ppsi" min="0"></td></tr>
+                            <tr><td class="cell-label">Paramedik</td><td><input type="number" class="cell-input" id="j13-paramedik" min="0"></td></tr>
+                            <tr><td class="cell-label">Lain-Lain</td><td><input type="number" class="cell-input" id="j13-lain" min="0"></td></tr>
+                        </tbody>
+                    </table>
+                    <h4 class="subsection-title mt-3">Aktiviti MHPSS (Bil Individu)</h4>
+                    <table class="data-table">
+                        <thead><tr><th>Aktiviti</th><th>Bil</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">Sesi Berkumpulan</td><td><input type="number" class="cell-input" id="j13-sesi" min="0"></td></tr>
+                            <tr><td class="cell-label">Psiko Pendidikan</td><td><input type="number" class="cell-input" id="j13-psikopendidikan" min="0"></td></tr>
+                            <tr><td class="cell-label">Relaksasi</td><td><input type="number" class="cell-input" id="j13-relaksasi" min="0"></td></tr>
+                            <tr><td class="cell-label">Ekspresi Seni</td><td><input type="number" class="cell-input" id="j13-ekspresiseni" min="0"></td></tr>
+                        </tbody>
+                    </table>
+                    <h4 class="subsection-title mt-3">Bil Individu Diberikan Intervensi</h4>
+                    <table class="data-table">
+                        <thead><tr><th>Kategori</th><th>Bil</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">Orang Awam</td><td><input type="number" class="cell-input" id="j13-awam" min="0"></td></tr>
+                            <tr><td class="cell-label">Petugas KKM</td><td><input type="number" class="cell-input" id="j13-kkm" min="0"></td></tr>
+                            <tr><td class="cell-label">Petugas Agensi Lain</td><td><input type="number" class="cell-input" id="j13-agensi" min="0"></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Jadual 14 + Borang 18: Penilaian -->
+                <div class="form-section">
+                    <h3 class="section-title">Jadual 14 / Borang 18 — Penilaian Status Kesihatan Mental di PPS</h3>
+                    <table class="data-table">
+                        <thead><tr><th>Perkara</th><th>Bil</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">Bilangan Lokasi</td><td><input type="number" class="cell-input" id="j14-lokasi" min="0"></td></tr>
+                            <tr><td class="cell-label">Jumlah Dirujuk</td><td><input type="number" class="cell-input" id="j14-dirujuk" min="0"></td></tr>
+                        </tbody>
+                    </table>
+                    <h4 class="subsection-title mt-3">Pegawai Dirujuk</h4>
+                    <table class="data-table">
+                        <thead><tr><th>Kategori</th><th>Bil</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">MO</td><td><input type="number" class="cell-input" id="j14-mo" min="0"></td></tr>
+                            <tr><td class="cell-label">FMS</td><td><input type="number" class="cell-input" id="j14-fms" min="0"></td></tr>
+                            <tr><td class="cell-label">PSY</td><td><input type="number" class="cell-input" id="j14-psy" min="0"></td></tr>
+                            <tr><td class="cell-label">PPSI</td><td><input type="number" class="cell-input" id="j14-ppsi" min="0"></td></tr>
+                            <tr><td class="cell-label">Lain-Lain</td><td><input type="number" class="cell-input" id="j14-lain" min="0"></td></tr>
+                        </tbody>
+                    </table>
+                    <h4 class="subsection-title mt-3">Isu Dikenalpasti</h4>
+                    <table class="data-table">
+                        <thead><tr><th>Perkara</th><th>Bil</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">DASS/GAD2 Positif</td><td><input type="number" class="cell-input" id="j14-dass" min="0"></td></tr>
+                            <tr><td class="cell-label">Mengalami Masalah Psikologi</td><td><input type="number" class="cell-input" id="j14-masalah" min="0"></td></tr>
+                            <tr><td class="cell-label">Ideasi Bunuh Diri</td><td><input type="number" class="cell-input" id="j14-bunuhdiri" min="0"></td></tr>
+                            <tr><td class="cell-label">Bil Sejarah Penyakit Mental</td><td><input type="number" class="cell-input" id="b18-sejarah" min="0"></td></tr>
+                            <tr><td class="cell-label">Bil Menggunakan Ubat Psikiatri</td><td><input type="number" class="cell-input" id="b18-ubat" min="0"></td></tr>
+                            <tr><td class="cell-label">Bil Dirujuk FMS/Pakar</td><td><input type="number" class="cell-input" id="b18-rujuk" min="0"></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===================== MODULE 8: ANGGOTA & MOBILISASI ===================== -->
+            <div class="module-panel" id="panel-anggota">
+                <div class="panel-header">
+                    <h2>Anggota & Mobilisasi</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-outline btn-sm" onclick="exportModule('anggota')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Eksport Word
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="submitModule('anggota')">Hantar</button>
+                    </div>
+                </div>
+
+                <!-- Borang 16: Pemantauan Anggota Terjejas -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 16 — Pemantauan Anggota Terjejas Banjir</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Bil</th>
+                                <th>Nama Anggota</th>
+                                <th>Jawatan</th>
+                                <th>Kategori Tempat Bertugas</th>
+                                <th>Nama Tempat Bertugas</th>
+                                <th>Status Terjejas</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="b16-anggota-tbody"></tbody>
+                    </table>
+                    <button class="btn btn-outline btn-sm btn-add-row" onclick="addAnggotaRow()">+ Tambah Anggota</button>
+                </div>
+
+                <!-- Borang 19: Mobilisasi Petugas -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 19 — Mobilisasi Petugas KKM Bagi Bantuan Bencana</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Lokasi Bertugas</th>
+                                <th>Farmasi</th>
+                                <th>Peg. Perubatan</th>
+                                <th>PPP</th>
+                                <th>Jururawat</th>
+                                <th>PPKP/PKP</th>
+                                <th>Pemandu</th>
+                                <th>Jumlah</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="b19-mobilisasi-tbody"></tbody>
+                        <tfoot>
+                            <tr class="row-total">
+                                <td>JUMLAH</td>
+                                <td id="b19-total-farmasi">0</td>
+                                <td id="b19-total-perubatan">0</td>
+                                <td id="b19-total-ppp">0</td>
+                                <td id="b19-total-jururawat">0</td>
+                                <td id="b19-total-ppkp">0</td>
+                                <td id="b19-total-pemandu">0</td>
+                                <td id="b19-total-jumlah">0</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <button class="btn btn-outline btn-sm btn-add-row" onclick="addMobilisasiRow()">+ Tambah Lokasi</button>
+                </div>
+            </div>
+
+            <!-- ===================== MODULE 9: PASCA BENCANA ===================== -->
+            <div class="module-panel" id="panel-pasca">
+                <div class="panel-header">
+                    <h2>Pasca Bencana</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-outline btn-sm" onclick="exportModule('pasca')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Eksport Word
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="submitModule('pasca')">Hantar</button>
+                    </div>
+                </div>
+
+                <!-- Borang 20: Denggi Pasca -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 20 — Kawalan Vektor Denggi di Kawasan Banjir (Pasca)</h3>
+                    <table class="data-table">
+                        <thead><tr><th>Perkara</th><th>Bil</th><th>Kum</th></tr></thead>
+                        <tbody>
+                            <tr><td class="cell-label">Bil Premis Di Lokaliti</td><td><input type="number" class="cell-input" id="b20-lokaliti" min="0"></td><td class="cell-na">—</td></tr>
+                            <tr><td class="cell-label">Bil Premis Diperiksa</td><td><input type="number" class="cell-input bil-field" id="b20-diperiksa-bil" min="0"></td><td class="cell-auto kum-field" id="b20-diperiksa-kum">0</td></tr>
+                            <tr><td class="cell-label">Premis Positif</td><td><input type="number" class="cell-input bil-field" id="b20-positif-bil" min="0"></td><td class="cell-auto kum-field" id="b20-positif-kum">0</td></tr>
+                            <tr><td class="cell-label">Bil Bekas Diperiksa</td><td><input type="number" class="cell-input bil-field" id="b20-bekas-diperiksa-bil" min="0"></td><td class="cell-auto kum-field" id="b20-bekas-diperiksa-kum">0</td></tr>
+                            <tr><td class="cell-label">Bekas Positif</td><td><input type="number" class="cell-input bil-field" id="b20-bekas-positif-bil" min="0"></td><td class="cell-auto kum-field" id="b20-bekas-positif-kum">0</td></tr>
+                            <tr class="row-highlight"><td class="cell-label">AI (%)</td><td class="cell-auto" id="b20-ai">0.00%</td><td class="cell-na">—</td></tr>
+                            <tr class="row-highlight"><td class="cell-label">BI</td><td class="cell-auto" id="b20-bi">0.00</td><td class="cell-na">—</td></tr>
+                            <tr><td class="cell-label">Bil Premis Disembur Kabus</td><td><input type="number" class="cell-input bil-field" id="b20-kabus-bil" min="0"></td><td class="cell-auto kum-field" id="b20-kabus-kum">0</td></tr>
+                            <tr><td class="cell-label">Bil Premis Larviciding</td><td><input type="number" class="cell-input bil-field" id="b20-larviciding-bil" min="0"></td><td class="cell-auto kum-field" id="b20-larviciding-kum">0</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="alert-box" id="b20-alert" style="display:none;">
+                        ⚠️ AI > 1% atau BI > 5: Kawalan Larvisid dan Adultisid perlu segera di lokaliti
+                    </div>
+                </div>
+
+                <!-- Borang 21: Anggaran Kerosakan -->
+                <div class="form-section">
+                    <h3 class="section-title">Borang 21 — Anggaran Kerosakan Fasiliti (Pasca)</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Bil</th>
+                                <th>Nama Fasiliti</th>
+                                <th>Jenis Kerosakan</th>
+                                <th>Anggaran Kerosakan (RM)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="b21-kerosakan-tbody"></tbody>
+                        <tfoot>
+                            <tr class="row-total">
+                                <td colspan="3">JUMLAH ANGGARAN</td>
+                                <td id="b21-total-rm">RM 0.00</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <button class="btn btn-outline btn-sm btn-add-row" onclick="addKerosakanRow()">+ Tambah Fasiliti</button>
+                </div>
+            </div>
+
+            <!-- ===================== MODULE 10: PAPARAN NEGERI ===================== -->
+            <div class="module-panel" id="panel-negeri">
+                <div class="panel-header">
+                    <h2>📊 Paparan Peringkat Negeri — Kedah</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-outline btn-sm" onclick="refreshStateView()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                            Muat Semula
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="exportStateView()">Eksport Semua ke Word</button>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="info-box">
+                        Paparan ini memaparkan data terkumpul dari semua daerah di Kedah. Data dikemas kini secara automatik dari Google Sheets.
+                    </div>
+                    <div id="state-view-content">
+                        <p class="text-center text-muted py-4">Klik "Muat Semula" untuk memuat data peringkat negeri.</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>KPAS/BANJIR — Kementerian Kesihatan Malaysia © 2025</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
